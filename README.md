@@ -1,4 +1,4 @@
-# news_information
+# News_Website
 A project of news website base on python and the frame is flask
 ## 新经资讯网
   + 一款新闻展示的Web项目，主要为用户提供最新的金融资讯、数据
