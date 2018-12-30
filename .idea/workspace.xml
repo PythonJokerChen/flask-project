@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="525f6bab-611a-4713-b5dd-22bc883e46b4" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" />
-    </list>
+    <list default="true" id="525f6bab-611a-4713-b5dd-22bc883e46b4" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +110,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$/project_git" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="editing.templates" />
+    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -192,6 +188,7 @@
       <workItem from="1546051235798" duration="11956000" />
       <workItem from="1546130106816" duration="535000" />
       <workItem from="1546141168721" duration="34000" />
+      <workItem from="1546158336529" duration="41000" />
     </task>
     <task id="LOCAL-00001" summary="second sub">
       <created>1546066499730</created>
@@ -204,7 +201,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="12525000" />
+    <option name="totallyTimeSpent" value="12566000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -216,9 +213,9 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="27" width="906" height="891" extended-state="6" />
+    <frame x="46" y="25" width="908" height="893" extended-state="6" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.102564104" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.21976744" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Docker" order="0" show_stripe_button="false" />
@@ -245,6 +242,9 @@
     <option name="version" value="1" />
   </component>
   <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/project_git" />
+    </ignored-roots>
     <MESSAGE value="second sub" />
     <option name="LAST_COMMIT_MESSAGE" value="second sub" />
   </component>
