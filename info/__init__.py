@@ -46,7 +46,10 @@ def app_factory(config_name):
     Session(app)
     # 开启CSRF保护
     CSRFProtect(app)
-    # 注册蓝图, 在此处进行导包防止循环导入
+    # 注册首页蓝图, 在此处进行导包防止循环导入
     from info.modules.index import index_blue
     app.register_blueprint(index_blue)
+    # 注册登录页面蓝图
+    from info.modules.passport import passport_blue
+    app.register_blueprint(passport_blue)
     return app
