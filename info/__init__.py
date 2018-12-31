@@ -1,7 +1,7 @@
 from logging.handlers import RotatingFileHandler
 from flask_sqlalchemy import SQLAlchemy
-from flask_wtf.csrf import CSRFProtect
 from flask_session import Session
+from flask_wtf import CSRFProtect
 from config import config
 from flask import Flask
 import logging
@@ -30,10 +30,6 @@ def app_factory(config_name):
     # 配置项目日志
     log_factory(config_name)
     app = Flask(__name__)
-    # 设置session保护
-    Session(app)
-    # 开启csrf保护
-    CSRFProtect(app)
     # 导入配置文件
     app.config.from_object(config[config_name])
     # 配置mysql
@@ -43,5 +39,9 @@ def app_factory(config_name):
         host=config[config_name].REDIS_HOST,
         port=config[config_name].REDIS_PORT
     )
+    # 设置SESSION保护
+    Session(app)
+    # 开启CSRF保护
+    CSRFProtect(app)
 
     return app

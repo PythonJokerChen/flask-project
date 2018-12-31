@@ -1,3 +1,4 @@
+from flask import session
 from flask_migrate import Migrate, MigrateCommand
 from info import app_factory, mysql_db
 from flask_script import Manager
@@ -14,6 +15,7 @@ manager.add_command('db', MigrateCommand)
 
 @app.route('/')
 def index():
+    session['name'] = 'aaaaa'
     return 'index'
 
 
