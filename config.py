@@ -23,7 +23,7 @@ class Config:
 
     # 默认的日志等级, 在开发模式下使用DEBUG等级记录所有产生的事件
     LOG_LEVEL = logging.DEBUG
-    num =1
+
 
 class DevelopmentConfig(Config):
     """开发模式下的配置"""
