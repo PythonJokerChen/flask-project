@@ -1,3 +1,4 @@
+from info.modules.index import index_blue
 from logging.handlers import RotatingFileHandler
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
@@ -8,6 +9,8 @@ import redis
 
 # 在Flask很多拓展里面都可以先初始化拓展的对象, 然后再去调用init_app方法去初始化
 # 根据这个特性可以现在函数外部定义db对象然后在app_factory函数内部手动调用init_app方法
+
+
 mysql_db = SQLAlchemy()
 redis_db = None
 
@@ -44,5 +47,6 @@ def app_factory(config_name):
     Session(app)
     # 开启CSRF保护
     CSRFProtect(app)
-
+    # 注册蓝图
+    app.register_blueprint(index_blue)
     return app
