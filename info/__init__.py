@@ -2,11 +2,12 @@ from logging.handlers import RotatingFileHandler
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from flask_wtf import CSRFProtect
-from config import config
 from flask import Flask
-import logging
+from config import *
 import redis
 
+# 在Flask很多拓展里面都可以先初始化拓展的对象, 然后再去调用init_app方法去初始化
+# 根据这个特性可以现在函数外部定义db对象然后在app_factory函数内部手动调用init_app方法
 mysql_db = SQLAlchemy()
 redis_db = None
 
