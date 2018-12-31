@@ -1,7 +1,7 @@
-from flask import session
 from flask_migrate import Migrate, MigrateCommand
 from info import app_factory, mysql_db
 from flask_script import Manager
+from flask import session
 
 # 通过配置工厂创建app, 并可以选择传入development或者production
 app = app_factory('development')

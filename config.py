@@ -36,8 +36,15 @@ class ProductionConfig(Config):
     LOG_LEVEL = logging.ERROR
 
 
+class TestingConfig(Config):
+    """单元测试模式下的配置"""
+    DEBUG = True
+    TESTING = True
+
+
 # 配置字典, 通过此字典给__init__.py文件传入不同的配置信息
 config = {
     "development": DevelopmentConfig,
-    "production": ProductionConfig
+    "production": ProductionConfig,
+    "testing": TestingConfig
 }
