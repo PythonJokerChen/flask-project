@@ -45,7 +45,7 @@ def app_factory(config_name):
     # 设置SESSION保护
     Session(app)
     # 开启CSRF保护
-    CSRFProtect(app)
+    # CSRFProtect(app)
     # 注册首页蓝图, 在此处进行导包防止循环导入
     from info.modules.index import index_blue
     app.register_blueprint(index_blue)
