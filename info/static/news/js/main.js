@@ -116,8 +116,26 @@ $(function () {
             $("#login-password-err").show();
             return;
         }
-
+        params = {
+            "mobile": mobile,
+            "password": password
+        }
         // 发起登录请求
+        $.ajax({
+            url: '/passport/login',
+            type: 'post',
+            contentType: "application/json",
+            data: JSON.stringify(params),
+            success: function (response) {
+                if (response.errno == 0) {
+                    // 登录成功
+                    location.reload()
+                } else {
+                    $("#login-password-err").html(response.errmsg);
+                    $("#login-password-err").show()
+                }
+            }
+        })
     })
 
 
