@@ -32,23 +32,30 @@ $(function () {
     });
 
 
-    // 点击输入框，提示文字上移
-    $('.form_group').on('click focusin', function () {
-        $(this).children('.input_tip').animate({
-            'top': -5,
-            'font-size': 12
-        }, 'fast').siblings('input').focus().parent().addClass('hotline');
+    // // 点击输入框，提示文字上移
+    // $('.form_group').on('click focusin', function () {
+    //     $(this).children('.input_tip').animate({
+    //         'top': -5,
+    //         'font-size': 12
+    //     }, 'fast').siblings('input').focus().parent().addClass('hotline');
+    // })
+    //
+    // // 输入框失去焦点，如果输入框为空，则提示文字下移
+    // $('.form_group input').on('blur focusout', function () {
+    //     $(this).parent().removeClass('hotline');
+    //     var val = $(this).val();
+    //     if (val == '') {
+    //         $(this).siblings('.input_tip').animate({'top': 22, 'font-size': 14}, 'fast');
+    //     }
+    // })
+    $('.form_group').on('click', function () {
+        $(this).children('input').focus()
     })
 
-    // 输入框失去焦点，如果输入框为空，则提示文字下移
-    $('.form_group input').on('blur focusout', function () {
-        $(this).parent().removeClass('hotline');
-        var val = $(this).val();
-        if (val == '') {
-            $(this).siblings('.input_tip').animate({'top': 22, 'font-size': 14}, 'fast');
-        }
+    $('.form_group input').on('focusin', function () {
+        $(this).siblings('.input_tip').animate({'top': -5, 'font-size': 12}, 'fast')
+        $(this).parent().addClass('hotline');
     })
-
 
     // 打开注册框
     $('.register_btn').click(function () {
@@ -236,8 +243,12 @@ function sendSMSCode() {
                 }, 1000)
             } else {
                 // 表示短信发送失败
-                alert(response.errmsg)
+                $("#register-sms-code-err").html(response.errmsg)
+                $("#register-sms-code-err").show()
                 $(".get_code").attr("onclick", "sendSMSCode()")
+                if (response.errno == "4004") {
+                    generateImageCode()
+                }
             }
         }
     })

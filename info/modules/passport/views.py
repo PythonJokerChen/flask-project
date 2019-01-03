@@ -81,11 +81,11 @@ def send_sms():
     random_num = random.randint(0, 999999)
     sms_code = "%06d" % random_num
     current_app.logger.debug("短信验证码的内容：%s" % sms_code)
-    result = CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES / 60], "1")
-    print(result)
-    if result != 0:
-        # 发送短信失败
-        return jsonify(errno=RET.THIRDERR, errmsg="发送短信失败")
+    # result = CCP().send_template_sms(mobile, [sms_code, constants.SMS_CODE_REDIS_EXPIRES / 60], "1")
+    # print(result)
+    # if result != 0:
+    #     # 发送短信失败
+    #     return jsonify(errno=RET.THIRDERR, errmsg="发送短信失败")
     print(random_num)
 
     # 6. redis中保存短信验证码内容
@@ -135,7 +135,7 @@ def register():
         return jsonify(errno=RET.DBERR, errmsg="数据查询失败")
 
     # 4.校验用户输入的短信验证码和服务器的短信验证码
-    if real_sms_code != smscode:
+    if real_sms_code.decode('utf-8') != smscode:
         return jsonify(errno=RET.DATAERR, errmsg="验证码输入错误")
 
     # 5.如果一致, 初始化User模型
@@ -164,3 +164,48 @@ def register():
 
     # 8.返回响应
     return jsonify(errno=RET.OK, errmsg="注册成功")
+
+
+@passport_blue.route('/login', methods=['POST'])
+def login():
+    """
+    登录
+    1.获取参数
+    2.校验参数
+    3.校验密码是否正确
+    4.保存用户的登录状态
+    5.返回响应
+    :return:
+    """
+    # 1.获取参数
+    mobile = request.json.get('mobile')
+    password = request.json.get('password')
+
+    # 2.校验参数
+    if not all([mobile, password]):
+        return jsonify(errno=RET.PARAMERR, errmsg="采纳书错误")
+    # 校验手机号
+    phone_num = re.match("^1[3578][0-9]{9}$", mobile)
+    if not phone_num:
+        return jsonify(errno=RET.DATAERR, errmsg='手机号错误')
+
+    # 3.校验密码是否正确
+    try:
+        user = User.query.filter(User.mobile == mobile).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据查询错误")
+    # 判断用户是否存在
+    if not user:
+        return jsonify(errno=RET.NODATA, errmsg="用户不存在")
+    # 校验登陆密码和用户的密码是否一致
+    if not user.check_password(password):
+        return jsonify(errno=RET.PWDERR, errmsg="用户名或密码错误")
+
+    # 4.保存用户的登录状态
+    session["user_id"] = user.id
+    session["mobile"] = user.mobile
+    session["nick_name"] = user.nick_name
+
+    # 5.返回响应
+    return jsonify(errno=RET.OK, errmsg="登录成功")

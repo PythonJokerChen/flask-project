@@ -61,7 +61,12 @@ class User(BaseModel, mysql_db.Model):
 
     @password.setter
     def password(self, value):
+        """对密码进行hash加密"""
         self.password_hash = generate_password_hash(value)
+
+    def check_password(self, password):
+        """校验密码"""
+        return check_password_hash(self.password_hash, password)
 
     # 当前用户所发布的新闻
     news_list = mysql_db.relationship('News', backref='user', lazy='dynamic')
