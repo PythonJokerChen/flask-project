@@ -206,6 +206,26 @@ def login():
     session["user_id"] = user.id
     session["mobile"] = user.mobile
     session["nick_name"] = user.nick_name
+    # 记录用户的最后登录时间
+    user.last_login = datetime.now()
+    try:
+        mysql_db.session.commit()
+    except Exception as e:
+        mysql_db.session.rollback()
+        current_app.logger.error(e)
 
     # 5.返回响应
     return jsonify(errno=RET.OK, errmsg="登录成功")
+
+
+@passport_blue.route('/logout', methods=["POST"])
+def logout():
+    """
+    登出
+    清除session中的对应登录之后保存的信息
+    :return:
+    """
+    session.pop("user_id", None)
+    session.pop("nick_name", None)
+    session.pop("mobile", None)
+    return jsonify(errno=RET.OK, errmsg="登出成功")

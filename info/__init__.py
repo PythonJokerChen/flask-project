@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from flask_wtf import CSRFProtect
 from flask import Flask
+from flask_wtf.csrf import generate_csrf
+
 from config import *
 import redis
 
@@ -45,7 +47,15 @@ def app_factory(config_name):
     # 设置SESSION保护
     Session(app)
     # 开启CSRF保护
-    # CSRFProtect(app)
+    CSRFProtect(app)
+
+    @app.after_request
+    def after_request(response):
+        # 生成一个随机的csrf值
+        csrf_token = generate_csrf()
+        response.set_cookie("csrf_token", csrf_token)
+        return response
+
     # 注册首页蓝图, 在此处进行导包防止循环导入
     from info.modules.index import index_blue
     app.register_blueprint(index_blue)

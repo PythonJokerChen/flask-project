@@ -32,22 +32,22 @@ $(function () {
     });
 
 
-    // // 点击输入框，提示文字上移
-    // $('.form_group').on('click focusin', function () {
-    //     $(this).children('.input_tip').animate({
-    //         'top': -5,
-    //         'font-size': 12
-    //     }, 'fast').siblings('input').focus().parent().addClass('hotline');
-    // })
-    //
-    // // 输入框失去焦点，如果输入框为空，则提示文字下移
-    // $('.form_group input').on('blur focusout', function () {
-    //     $(this).parent().removeClass('hotline');
-    //     var val = $(this).val();
-    //     if (val == '') {
-    //         $(this).siblings('.input_tip').animate({'top': 22, 'font-size': 14}, 'fast');
-    //     }
-    // })
+    // 点击输入框，提示文字上移
+    $('.form_group').on('click focusin', function () {
+        $(this).children('.input_tip').animate({
+            'top': -5,
+            'font-size': 12
+        }, 'fast').siblings('input').focus().parent().addClass('hotline');
+    })
+
+    // 输入框失去焦点，如果输入框为空，则提示文字下移
+    $('.form_group input').on('blur focusout', function () {
+        $(this).parent().removeClass('hotline');
+        var val = $(this).val();
+        if (val == '') {
+            $(this).siblings('.input_tip').animate({'top': 22, 'font-size': 14}, 'fast');
+        }
+    })
     $('.form_group').on('click', function () {
         $(this).children('input').focus()
     })
@@ -126,6 +126,9 @@ $(function () {
             type: 'post',
             contentType: "application/json",
             data: JSON.stringify(params),
+            headers: {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
             success: function (response) {
                 if (response.errno == 0) {
                     // 登录成功
@@ -180,6 +183,9 @@ $(function () {
             type: "post",
             contentType: "application/json",
             data: JSON.stringify(params),
+            headers: {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
             success: function (response) {
                 if (response.errno == "0") {
                     // 代表注册成功, 刷新当前页面
@@ -240,6 +246,9 @@ function sendSMSCode() {
         data: JSON.stringify(param),
         // 请求参数的数据格式
         contentType: 'application/json',
+        headers: {
+            "X-CSRFToken": getCookie("csrf_token")
+        },
         success: function (response) {
             if (response.errno == "0") {
                 // 表示短信发送成功
@@ -305,4 +314,20 @@ function generateUUID() {
         return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
     });
     return uuid;
+}
+
+function logout() {
+    $.ajax({
+        url: "/passport/logout",
+        type: "post",
+        contentType: "application/json",
+        headers: {
+            "X-CSRFToken": getCookie("csrf_token")
+        },
+        success: function (resp) {
+            // 刷新当前界面
+            alert(resp.errmsg)
+            location.reload()
+        }
+    })
 }
