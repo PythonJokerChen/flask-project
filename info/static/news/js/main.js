@@ -144,8 +144,28 @@ $(function () {
             return;
         }
 
+        var params = {
+            "mobile": mobile,
+            "smscode": smscode,
+            "password": password
+        };
         // 发起注册请求
-
+        $.ajax({
+            url: "/passport/register",
+            type: "post",
+            contentType: "application/json",
+            data: JSON.stringify(params),
+            success: function (response) {
+                if (response.errno == "0") {
+                    // 代表注册成功, 刷新当前页面
+                    location.reload()
+                } else {
+                    // 代表注册失败
+                    $('#register-password-err').html(response.errmsg);
+                    $('#register-password-err').show()
+                }
+            }
+        })
 
     })
 });
@@ -195,13 +215,12 @@ function sendSMSCode() {
         data: JSON.stringify(param),
         // 请求参数的数据格式
         contentType: 'application/json',
-        success:function (response) {
-            if(response.errno == "0")
-            {
+        success: function (response) {
+            if (response.errno == "0") {
                 // 表示短信发送成功
                 var num = 60
                 var t = setInterval(function () {
-                    if(num == 1){
+                    if (num == 1) {
                         // 代表倒计时结束
                         // 清除倒计时
                         clearInterval(t)
@@ -209,19 +228,17 @@ function sendSMSCode() {
                         $(".get_code").html("点击获取验证码")
                         // 添加onclick属性
                         $(".get_code").attr("onclick", "sendSMSCode()")
-                    }else{
+                    } else {
                         num -= 1
                         // 设置a标签的显示内容
                         $(".get_code").html(num + "秒")
                     }
                 }, 1000)
+            } else {
+                // 表示短信发送失败
+                alert(response.errmsg)
+                $(".get_code").attr("onclick", "sendSMSCode()")
             }
-            else
-                {
-                    // 表示短信发送失败
-                    alert(response.errmsg)
-                    $(".get_code").attr("onclick", "sendSMSCode()")
-                }
         }
     })
 }

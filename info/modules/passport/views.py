@@ -1,9 +1,10 @@
 from flask import request, abort, current_app, make_response, jsonify, session
-from info.models import User
+from info import redis_db, constants, mysql_db
 from info.utils.captcha.captcha import captcha
 from info.utils.response_code import RET
 from info.libs.yuntongxun.sms import CCP
-from info import redis_db, constants, mysql_db
+from datetime import datetime
+from info.models import User
 from . import passport_blue
 import random
 import re
@@ -140,14 +141,19 @@ def register():
     # 5.如果一致, 初始化User模型
     user = User()
     user.mobile = mobile
+    # 目前没有用户名, 用手机号进行替代
     user.nick_name = mobile
-    # TODO 对密码做处理
+    # 用户最后登录时间
+    user.last_login = datetime.now()
+    # 对密码做处理
+    user.password = password
 
     # 6.加到数据库
     try:
         mysql_db.session.add(user)
         mysql_db.session.commit()
     except Exception as e:
+        mysql_db.rollback()
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsy="数据保存失败")
 
