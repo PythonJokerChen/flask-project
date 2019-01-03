@@ -1,8 +1,9 @@
-from flask import request, abort, current_app, make_response, jsonify
+from flask import request, abort, current_app, make_response, jsonify, session
+from info.models import User
 from info.utils.captcha.captcha import captcha
 from info.utils.response_code import RET
 from info.libs.yuntongxun.sms import CCP
-from info import redis_db, constants
+from info import redis_db, constants, mysql_db
 from . import passport_blue
 import random
 import re
@@ -95,3 +96,65 @@ def send_sms():
 
     # 7. 返回发送短信成功的响应
     return jsonify(errno=RET.OK, errmsg="发送成功")
+
+
+@passport_blue.route('/register', methods=["POST"])
+def register():
+    """
+    注册逻辑
+    1.获取参数
+    2.校验参数
+    3.取到服务器短信验证码
+    4.校验服务器短信验证码和用户输入验证码
+    5.如果一至, 初始化User模型
+    6.将User模型添加到数据库
+    7.将登录状态保存到session
+    8.返回响应
+    :return:
+    """
+
+    # 1.获取参数
+    mobile = request.json.get('mobile')
+    smscode = request.json.get('smscode')
+    password = request.json.get('password')
+
+    # 2.校验参数
+    if not all([mobile, smscode, password]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+    # 校验手机号
+    phone_num = re.match("^1[3578][0-9]{9}$", mobile)
+    if not phone_num:
+        return jsonify(errno=RET.DATAERR, errmsg='手机号错误')
+
+    # 3.取到服务器的短信验证码
+    try:
+        real_sms_code = redis_db.get('SMS_' + mobile)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="数据查询失败")
+
+    # 4.校验用户输入的短信验证码和服务器的短信验证码
+    if real_sms_code != smscode:
+        return jsonify(errno=RET.DATAERR, errmsg="验证码输入错误")
+
+    # 5.如果一致, 初始化User模型
+    user = User()
+    user.mobile = mobile
+    user.nick_name = mobile
+    # TODO 对密码做处理
+
+    # 6.加到数据库
+    try:
+        mysql_db.session.add(user)
+        mysql_db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsy="数据保存失败")
+
+    # 7.往session中保存数据代表当前登录状态
+    session["user_id"] = user.id
+    session["mobile"] = user.mobile
+    session["nick_name"] = user.nick_name
+
+    # 8.返回响应
+    return jsonify(errno=RET.OK, errmsg="注册成功")
