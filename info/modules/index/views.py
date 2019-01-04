@@ -1,4 +1,5 @@
-from info.models import User
+from info import constants
+from info.models import User, News
 from . import index_blue
 from flask import render_template, current_app, session
 
@@ -17,8 +18,14 @@ def index():
             user = User.query.get(user_id)
         except Exception as e:
             current_app.logger.error(e)
+    news_dict = News.query.order_by(News.clicks.desc()).limit(constants.CLICK_RANK_MAX_NEWS)
+    click_list = []
+    if news_dict:
+        for news in news_dict:
+            click_list.append(news.to_basic_dict())
     data = {
-        "user_info": user.to_dict() if user else None
+        "user_info": user.to_dict() if user else None,
+        "click_list": click_list
     }
     return render_template('news/index.html', data=data)
 

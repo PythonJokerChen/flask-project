@@ -10,6 +10,8 @@ import redis
 
 # 在Flask很多拓展里面都可以先初始化拓展的对象, 然后再去调用init_app方法去初始化
 # 根据这个特性可以现在函数外部定义db对象然后在app_factory函数内部手动调用init_app方法
+from info.utils.self_filter import index_class
+
 mysql_db = SQLAlchemy()
 # python3.6版本可以通过添加类型标识来防止循环导入的问题
 redis_db = None  # type:redis.StrictRedis
@@ -55,7 +57,8 @@ def app_factory(config_name):
         csrf_token = generate_csrf()
         response.set_cookie("csrf_token", csrf_token)
         return response
-
+    # 添加自定义过滤器
+    app.add_template_filter(index_class, "index_class")
     # 注册首页蓝图, 在此处进行导包防止循环导入
     from info.modules.index import index_blue
     app.register_blueprint(index_blue)
