@@ -153,7 +153,7 @@ def register():
         mysql_db.session.add(user)
         mysql_db.session.commit()
     except Exception as e:
-        mysql_db.rollback()
+        mysql_db.session.rollback()
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsy="数据保存失败")
 
