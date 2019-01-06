@@ -29,7 +29,7 @@
             <div class="user_login fr">
                 <img src="{% if data.user_info.avatar_url %} {{ data.user_info.avatar_url }} {% else %}../../static/news/images/person01.png{% endif %}"
                      class="lgin_pic">
-                <a href="#">{{ data.user_info.nick_name }}</a>
+                <a href="/user/info" id="nick_name">{{ data.user_info.nick_name }}</a>
                 <a href="#" onclick="logout()">退出</a>
             </div>
         {% else %}
@@ -45,22 +45,26 @@
     {% block contentBlock %}
 
     {% endblock %}
-    <div class="rank_con fr">
-        {% block authorBlcok %}
 
-        {% endblock %}
+    {% block rankBlcok %}
+        <div class="rank_con fr">
+            {% block authorBlcok %}
 
-        <div class="rank_title">
-            <h3>点击排行</h3>
+            {% endblock %}
+
+            <div class="rank_title">
+                <h3>点击排行</h3>
+            </div>
+            <ul class="rank_list">
+                {% for news in data.click_list %}
+                    <li><span class='{{ loop.index | index_class }}'>{{ loop.index }}</span><a
+                            href="#">{{ news.title }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
         </div>
-        <ul class="rank_list">
-            {% for news in data.click_list %}
-                <li><span class='{{ loop.index | index_class }}'>{{ loop.index }}</span><a
-                        href="#">{{ news.title }}</a>
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
+    {% endblock %}
+
 
 </div>
 <div class="footer">

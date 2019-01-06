@@ -69,4 +69,7 @@ def app_factory(config_name):
     # 注册新闻详情页面蓝图
     from info.modules.news import news_blue
     app.register_blueprint(news_blue)
+    # 注册个人中下页面蓝图
+    from info.modules.profile import profile_blue
+    app.register_blueprint(profile_blue)
     return app
