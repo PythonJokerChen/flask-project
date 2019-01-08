@@ -48,7 +48,7 @@ def admin_login():
     return redirect(url_for('admin.admin_index'))
 
 
-@admin_blue.route('/index')
+@admin_blue.route('/index', methods=['POST', 'GET'])
 @user_login_data
 def admin_index():
     """后台主页"""

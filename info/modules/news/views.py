@@ -1,6 +1,6 @@
 from flask import render_template, g, current_app, abort, request, jsonify
 from info import constants, mysql_db
-from info.models import News, Comment, CommentLike
+from info.models import News, Comment, CommentLike, User
 from info.utils.common import user_login_data
 from info.utils.response_code import RET
 from . import news_blue
@@ -11,6 +11,7 @@ from . import news_blue
 def news_detail(news_id):
     """显示首页"""
     # 查询新闻点击量数据
+    user = g.user
     news_list = []
     try:
         news_list = News.query.order_by(News.clicks.desc()).limit(constants.CLICK_RANK_MAX_NEWS)
@@ -36,11 +37,15 @@ def news_detail(news_id):
     # 更新新闻的点击次数
     news.clicks += 1
 
-    # 收藏逻辑代码
+    # 判断是否收藏新闻
     is_collected = False
+    # 判断收否关注作者
+    is_followed = False
     if g.user:
-        if news in g.user.collection_news:
+        if news in user.collection_news:
             is_collected = True
+        if news.user in user.followers:
+            is_followed = True
 
     # 查询评论数据
     comments = []
@@ -50,7 +55,7 @@ def news_detail(news_id):
         current_app.logger.error(e)
 
     comment_like_ids = []
-    if g.user:
+    if user:
         try:
             # 查询当前用户在当前新闻里面点赞了哪些评论
             # 1.查询当前新闻的所有评论, 取到所有的评论id
@@ -76,10 +81,11 @@ def news_detail(news_id):
 
     # 准备数据字典
     data = {
-        "user_info": g.user.to_dict() if g.user else None,
+        "user_info": user.to_dict() if user else None,
         "click_list": click_list,
         "news": news.to_dict(),
         "is_collected": is_collected,
+        "is_followed": is_followed,
         "comments": comment_dict_li
     }
     return render_template("news/detail.html", data=data)
@@ -247,3 +253,50 @@ def comment_like():
 
     # 6.返回响应
     return jsonify(errno=RET.OK, errmsg="OK")
+
+
+@news_blue.route("/followed_user", methods=["POST"])
+@user_login_data
+def followed_user():
+    """关注与取消关注"""
+    if not g.user:
+        return jsonify(errno=RET.SESSIONERR, errmsg="用户未登录")
+    # 1.获取参数
+    user_id = request.json.get("user_id")
+    action = request.json.get("action")
+
+    # 2.校验参数
+    if not all([user_id, action]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    if action not in ("follow", "unfollow"):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    # 3.查询用户相关信息
+    try:
+        target_user = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="查询失败")
+
+    if not target_user:
+        return jsonify(errno=RET.NODATA, errmsg="未查询到用户信息")
+
+    # 4.关注和取消关注的相关逻辑
+    if action == "follow":
+        if target_user.followers.filter(User.id == g.user.id).count() > 0:
+            return jsonify(errno=RET.DATAEXIST, errmsg="当前已关注")
+        target_user.followers.append(g.user)
+    else:
+        if target_user.followers.filter(User.id == g.user.id).count() > 0:
+            target_user.followers.remove(g.user)
+
+    # 5.保存数据到数据库
+    try:
+        mysql_db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg="保存失败")
+
+    # 6.返回响应
+    return jsonify(errno=RET.OK, errmsg="操作成功")
