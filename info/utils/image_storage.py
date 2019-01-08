@@ -3,11 +3,11 @@ import logging
 from qiniu import Auth, put_data
 
 # 需要填写你的 Access Key 和 Secret Key
-access_key = 'yV4GmNBLOgQK-1Sn3o4jktGLFdFSrlywR2C-hvsW'
-secret_key = 'bixMURPL6tHjrb8QKVg2tm7n9k8C7vaOeQ4MEoeW'
+access_key = 'ZeSKLkCx3c1vmQ65dqsGOjdNjLZ4if9uOmmLh0jg'
+secret_key = 'aUtDn1yDs0rSeFJmgut7CzOnJCK8OaaCqwlQLJ7o'
 
 # 要上传的空间
-bucket_name = 'ihome'
+bucket_name = 'newsinfo'
 
 
 def storage(data):

@@ -2,15 +2,13 @@ from logging.handlers import RotatingFileHandler
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from flask_wtf import CSRFProtect
-from flask import Flask
+from flask import Flask, render_template, g, current_app
 from flask_wtf.csrf import generate_csrf
 from config import *
 import redis
 
 # 在Flask很多拓展里面都可以先初始化拓展的对象, 然后再去调用init_app方法去初始化
 # 根据这个特性可以现在函数外部定义db对象然后在app_factory函数内部手动调用init_app方法
-
-
 mysql_db = SQLAlchemy()
 # python3.6版本可以通过添加类型标识来防止循环导入的问题
 redis_db = None  # type:redis.StrictRedis
@@ -49,6 +47,16 @@ def app_factory(config_name):
     Session(app)
     # 开启CSRF保护
     CSRFProtect(app)
+    from info.utils.common import user_login_data
+
+    @app.errorhandler(404)
+    @user_login_data
+    def page_not_found(e):
+        """全局捕获404页面"""
+        user = g.user
+        data = {"user": user.to_dict() if user else None}
+        current_app.logger.error(e)
+        return render_template("news/404.html", data=data)
 
     @app.after_request
     def after_request(response):
@@ -69,7 +77,10 @@ def app_factory(config_name):
     # 注册新闻详情页面蓝图
     from info.modules.news import news_blue
     app.register_blueprint(news_blue)
-    # 注册个人中下页面蓝图
+    # 注册个人中心页面蓝图
     from info.modules.profile import profile_blue
     app.register_blueprint(profile_blue)
+    # 注册后台页面蓝图
+    from info.modules.admin import admin_blue
+    app.register_blueprint(admin_blue)
     return app

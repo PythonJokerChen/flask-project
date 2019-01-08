@@ -1,4 +1,5 @@
 .idea/
 *.py[cod]
+.qiniu_pythonsdk_hostscache.json
 logs/log*
 migrations
