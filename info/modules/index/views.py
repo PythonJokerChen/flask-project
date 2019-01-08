@@ -61,7 +61,7 @@ def news_list():
         return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
 
     # 3.查询数据
-    filters = []  # 查询的不是最新的数据
+    filters = [News.status == 0]  # 查询的不是最新的数据
     if cid != 1:
         # 需要添加条件
         filters.append(News.category_id == cid)

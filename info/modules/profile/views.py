@@ -1,10 +1,28 @@
 from flask import render_template, g, redirect, request, jsonify, current_app
 
-from info import constants
+from info import constants, mysql_db
+from info.models import Category, News
 from info.utils.common import user_login_data
 from info.utils.image_storage import storage
 from info.utils.response_code import RET
 from . import profile_blue
+
+
+@profile_blue.route('/info')
+@user_login_data
+def user_info():
+    """用户中心主页面"""
+    user = g.user
+
+    # 如果用户没有登录则重定向到首页
+    if not user:
+        return redirect("/")
+
+    data = {
+        "user_info": user.to_dict()
+    }
+
+    return render_template('news/user.html', data=data)
 
 
 @profile_blue.route('/base_info', methods=["GET", "POST"])
@@ -34,23 +52,6 @@ def base_info():
     user.nick_name = nick_name
 
     return jsonify(errno=RET.OK, errmsg="修改成功")
-
-
-@profile_blue.route('/info')
-@user_login_data
-def user_info():
-    """用户中心主页面"""
-    user = g.user
-
-    # 如果用户没有登录则重定向到首页
-    if not user:
-        return redirect("/")
-
-    data = {
-        "user_info": user.to_dict()
-    }
-
-    return render_template('news/user.html', data=data)
 
 
 @profile_blue.route('/pic_info', methods=["GET", "POST"])
@@ -108,3 +109,152 @@ def pass_info():
     user.password = new_password
 
     return jsonify(errno=RET.OK, errmsg="保存成功")
+
+
+@profile_blue.route('/collection')
+@user_login_data
+def user_collection():
+    """新闻收藏"""
+    # 1.获取参数
+    page = request.args.get("p", 1)
+
+    # 2.判断参数
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    # 3.查询用户指定页数的收藏新闻
+    user = g.user
+    paginate = user.collection_news.paginate(page, constants.USER_COLLECTION_MAX_NEWS, False)
+    current_page = paginate.page
+    total_page = paginate.pages
+    news_list = paginate.items
+
+    news_dict_li = []
+    for news in news_list:
+        news_dict_li.append(news.to_basic_dict())
+
+    data = {
+        "total_page": total_page,
+        "current_page": current_page,
+        "collections": news_dict_li
+    }
+
+    # 4.返回响应和数据
+    return render_template('news/user_collection.html', data=data)
+
+
+@profile_blue.route('/news_release', methods=["GET", "POST"])
+@user_login_data
+def news_release():
+    """发布新闻"""
+    if request.method == "GET":
+        # 1.加载新闻分类数据
+        categories = []
+        try:
+            categories = Category.query.all()
+        except Exception as e:
+            current_app.logger.error(e)
+
+        category_dict_li = []
+        for category in categories:
+            category_dict_li.append(category.to_dict())
+
+        # 移除 "最新" 分类
+        category_dict_li.pop(0)
+
+        # 2.渲染模板
+        return render_template('news/user_news_release.html', data={"categories": category_dict_li})
+
+    # 1.获取参数
+    title = request.form.get("title")  # 标题
+    source = "个人发布"  # 新闻来源
+    digest = request.form.get("digest")  # 摘要
+    content = request.form.get("content")  # 新闻内容
+    index_image = request.files.get("index_image")  # 索引图片
+    category_id = request.form.get("category_id")  # 分类id
+
+    # 2.校验参数
+    if not all([title, source, digest, content, index_image, category_id]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数有误")
+
+    try:
+        category_id = int(category_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    # 3.取到图片并上传到七牛云
+    try:
+        index_image_data = index_image.read()
+        key = storage(index_image_data)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.THIRDERR, errmsg="上传图片错误")
+
+    # 4.初始化新闻模型，并设置相关数据
+    news = News()
+    news.title = title
+    news.digest = digest
+    news.source = source
+    news.content = content
+    news.index_image_url = constants.QINIU_DOMIN_PREFIX + key
+    news.category_id = category_id
+    news.user_id = g.user.id
+    # 1代表待审核状态
+    news.status = 1
+    # 将数据保存到数据库
+    try:
+        mysql_db.session.add(news)
+        mysql_db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        mysql_db.session.rollback()
+        return jsonify(errno=RET.DBERR, errmsg="保存数据失败")
+
+    # 5. 返回结果
+    return jsonify(errno=RET.OK, errmsg="发布成功，等待审核")
+
+
+@profile_blue.route('/news_list')
+@user_login_data
+def user_news_list():
+    """用户新闻列表"""
+    # 1.获取页数
+    p = request.args.get("p", 1)
+    try:
+        p = int(p)
+    except Exception as e:
+        current_app.logger.error(e)
+        p = 1
+
+    # 2.查询当前用户发布的新闻
+    user = g.user
+    news_li = []
+    current_page = 1
+    total_page = 1
+    try:
+        paginate = News.query.filter(News.user_id == user.id).paginate(p, constants.USER_COLLECTION_MAX_NEWS, False)
+        # 获取当前页数据
+        news_li = paginate.items
+        # 获取当前页
+        current_page = paginate.page
+        # 获取总页数
+        total_page = paginate.pages
+    except Exception as e:
+        current_app.logger.error(e)
+
+    # 3.准备数据
+    news_dict_li = []
+    for news_item in news_li:
+        news_dict_li.append(news_item.to_review_dict())
+    data = {
+        "news_list": news_dict_li,
+        "total_page": total_page,
+        "current_page": current_page
+    }
+
+    # 4.渲染模板
+    return render_template('news/user_news_list.html', data=data)
