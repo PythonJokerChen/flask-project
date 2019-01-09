@@ -328,7 +328,7 @@ function logout() {
         },
         success: function (resp) {
             // 刷新当前界面
-            alert(resp.errmsg)
+            alert(resp.errmsg);
             location.reload()
         }
     })

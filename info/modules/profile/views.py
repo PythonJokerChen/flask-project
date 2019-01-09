@@ -204,7 +204,7 @@ def news_release():
     news.category_id = category_id
     news.user_id = g.user.id
     # 1代表待审核状态
-    news.status = 0
+    news.status = 1
     # 将数据保存到数据库
     try:
         mysql_db.session.add(news)
