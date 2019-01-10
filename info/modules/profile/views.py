@@ -1,7 +1,7 @@
-from flask import render_template, g, redirect, request, jsonify, current_app
+from flask import render_template, g, redirect, request, jsonify, current_app, abort
 
 from info import constants, mysql_db
-from info.models import Category, News
+from info.models import Category, News, User
 from info.utils.common import user_login_data
 from info.utils.image_storage import storage
 from info.utils.response_code import RET
@@ -258,3 +258,130 @@ def user_news_list():
 
     # 4.渲染模板
     return render_template('news/user_news_list.html', data=data)
+
+
+@profile_blue.route("/user_follow")
+@user_login_data
+def user_follow():
+    # 获取参数
+    user = g.user
+    page = request.args.get("p", 1)
+
+    # 校验参数
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+
+    # 定义默认参数
+    follows = []
+    current_page = 1
+    total_page = 1
+    try:
+        paginate = user.followed.paginate(page, constants.USER_FOLLOWED_MAX_COUNT, False)
+        current_page = paginate.page
+        total_page = paginate.pages
+        follows = paginate.items
+    except Exception as e:
+        current_app.logger.error(e)
+
+    # 将模型数据转换成字典列表
+    user_dict_li = []
+    for follower in follows:
+        user_dict_li.append(follower.to_dict())
+
+    data = {
+        "users": user_dict_li,
+        "total_page": total_page,
+        "current_page": current_page,
+
+    }
+    return render_template("news/user_follow.html", data=data)
+
+
+@profile_blue.route("/other_info")
+@user_login_data
+def other_info():
+    """查看其他用户信息"""
+    user = g.user
+    # 获取其他用户的id
+    user_id = request.args.get("id")
+    if not user_id:
+        abort(404)
+    # 根据用户Id查找模型
+    other = None
+    try:
+        other = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    if not other:
+        abort(404)
+
+    # 判断当前登录用户是否关注过该用户
+    is_followed = False
+    if user:
+        try:
+            if other.followers.filter(User.id == user.id).count():
+                is_followed = True
+        except Exception as e:
+            current_app.logger.error(e)
+
+    # 渲染模板
+    data = {
+        "user_info": user.to_dict(),
+        "other_info": other.to_dict(),
+        "is_followed": is_followed,
+    }
+    return render_template("news/other.html", data=data)
+
+
+@profile_blue.route("/other_news_list")
+@user_login_data
+def other_news_list():
+    # 获取页数
+    page = request.args.get("p", 1)
+    user = g.user
+
+    # 校验参数
+    if not all([page, user]):
+        return jsonify(errno=RET.PARAMERR, errmsg="参数错误")
+
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+
+    # 定义默认数据
+    news_li = []
+    current_page = 1
+    total_page = 1
+    # 根据数据查询模型
+    try:
+        paginate = News.query.filter(News.user_id == user.id).paginate(page, constants.OTHER_NEWS_PAGE_MAX_COUNT, False)
+        # 获取当前页数据
+        news_li = paginate.items
+        # 获取当前页
+        current_page = paginate.page
+        # 获取总页数
+        total_page = paginate.pages
+
+    except Exception as e:
+        current_app.logger.error(e)
+
+    # 将模型添加到字典列表
+    news_dict_li = []
+
+    for news_item in news_li:
+        news_dict_li.append(news_item.to_review_dict())
+
+    # 渲染模板
+    data = {
+        "news_list": news_dict_li,
+        "current_page": current_page,
+        "total_page": total_page,
+    }
+
+    return jsonify(errno=RET.OK, errmsg="OK", data=data)

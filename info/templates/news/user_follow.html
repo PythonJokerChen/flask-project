@@ -13,14 +13,15 @@
 <body class="inframe_body">
 <h3 class="common_title">我的关注</h3>
 <ul class="card_list_con">
+
     {% for user in data.users %}
         <li class="author_card card_list">
-            <a href="#" class="author_pic"><img src="{% if user.avatar_url %}
+            <a href="{{ url_for("profile.other_info") }}?id={{ user.id }}" target="_blank" class="author_pic"><img src="{% if user.avatar_url %}
             {{ user.avatar_url }}
             {% else %}
             ../../static/news/images/user_pic.png
             {% endif %}" alt="author_pic"></a>
-            <a href="#" class="author_name">{{ user.nick_name }}</a>
+            <a href="{{ url_for("profile.other_info") }}?id={{ user.id }}" target="_blank" class="author_name">{{ user.nick_name }}</a>
             <div class="author_resume">{{ user.signature }}</div>
             <div class="writings"><span>总篇数</span><b>{{ user.news_count }}</b></div>
             <div class="follows"><span>粉丝</span><b>{{ user.followers_count }}</b></div>
@@ -29,15 +30,13 @@
         </li>
     {% endfor %}
 </ul>
-
-
 <div id="pagination" class="page"></div>
 <script>
-    $(function() {
+    $(function () {
         $("#pagination").pagination({
             currentPage: {{ data.current_page }},
             totalPage: {{ data.total_page }},
-            callback: function(current) {
+            callback: function (current) {
                 window.location = "/user/user_follow?p=" + current
             }
         });
